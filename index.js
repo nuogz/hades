@@ -75,7 +75,7 @@ const initLogger = function(nameLog = 'default', levelLog = 'all', pathSave = nu
 		const actionHighlight = isColorText ? colorful(action) : action;
 
 		const textFinal = Chalk[color](
-			`[${time}][${level}][${nameLog}] ${systemHighlight}` +
+			`[${time}][${level}] ${systemHighlight}` +
 			(action ? ` >  ${actionHighlight}` : '') +
 			(texts.length ? `  ${textHighlight}` : '')
 		);
@@ -175,7 +175,7 @@ const initLogger = function(nameLog = 'default', levelLog = 'all', pathSave = nu
 	loggerStack = Log4js.getLogger('stack');
 
 	const logger = Log4js.getLogger('default');
-	logger.info('日志', '加载', pathSave ? `✔  日志路径{${pathSave}}` : '✔ ');
+	logger.info('日志', '加载', pathSave ? `✔ 日志路径{${pathSave}}` : '✔ ');
 
 	return logger;
 };
