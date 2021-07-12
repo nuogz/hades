@@ -13,7 +13,7 @@
  * @param {string} pathSave 保存路径
  * @param {boolean} isColorText 是否使用彩色编码保存日志
  * @returns {Object} Logger，日志系统自身
- * @version 2.4.2-2021.02.01.01
+ * @version 2.4.4-2021.07.12.01
  * @requires log4js(6)
  * @requires chalk(4)
  * @requires moment(2)
