@@ -10,7 +10,7 @@
  *   - error: 错误
  *   - fatal: 致命
  *   - mark: 标记
- * @version 2.5.1-2021.07.13.02
+ * @version 2.5.2-2021.07.15.01
  * @class
  * @requires log4js(6)
  * @requires chalk(4)
@@ -208,7 +208,13 @@ const Hades = class Hades {
 		loggerStack = Log4js.getLogger('stack');
 
 		const logger = Log4js.getLogger('default');
-		logger.info('日志', '加载', pathSave ? `✔ 日志路径{${pathSave}}` : '✔ ');
+
+		if(pathSave) {
+			logger.info('日志', '加载', '✔ ', `日志路径{${pathSave}}`);
+		}
+		else {
+			logger.info('日志', '加载', '✔ ');
+		}
 
 		return logger;
 	}
