@@ -7,6 +7,7 @@ import configureFile from './lib/FileAppender.js';
 import configureConsole from './lib/ConsoleAppender.js';
 
 import symbolLogUpdate from './lib/LogUpdateSymbol.js';
+import symbolLogDone from './lib/LogDoneSymbol.js';
 
 
 /**
@@ -51,7 +52,7 @@ export let hasFirstInited = false;
  *   - error: 错误
  *   - fatal: 致命
  *   - mark: 标记
- * @version 3.1.0-2021.08.17.02
+ * @version 3.2.0-2021.08.17.03
  * @class
  * @requires chalk(4)
  * @requires log-update(4)
@@ -147,8 +148,7 @@ const Hades = class Hades {
 
 		if(this.isLogInited) {
 			if(pathSave) {
-				this.info();
-				// this.info('日志', '加载', '✔ ', `日志路径{${pathSave}}`);
+				this.info('日志', '加载', '✔ ', `日志路径{${pathSave}}`);
 			}
 			else {
 				this.info('日志', '加载', '✔ ');
@@ -168,9 +168,13 @@ const Hades = class Hades {
 	}
 
 	/**
-	 * 控制台输入更新标记
+	 * 控制台输出更新标记
 	 */
-	get U() { return symbolLogUpdate; }
+	get symbolLogUpdate() { return symbolLogUpdate; }
+	/**
+	 * 控制台输出更新结束标记
+	 */
+	get symbolLogDone() { return symbolLogDone; }
 
 	/**
 	 * 跟踪（trace）
@@ -330,6 +334,86 @@ const Hades = class Hades {
 	 */
 	// eslint-disable-next-line no-unused-vars
 	markU(where, what, ...infos) { this.logger.mark(symbolLogUpdate, ...arguments); }
+
+
+	/**
+	 * 跟踪（trace、行内更新结束）
+	 * - 用于`可能大量`显示的底层的数据跟踪
+	 * - 如循环中的循环量的`i`等
+	 * - 不应在生产环境中使用，也不应出现在提交的代码中，通常调试后立即删除
+	 * - 颜色：blue
+	 * @param {any} where 在哪里发生
+	 * @param {any} where 在做什么
+	 * @param {any[]} infos 日志内容。第一个内容不换行，第二个内容开始换行并缩进
+	  */
+	// eslint-disable-next-line no-unused-vars
+	traceD(where, what, ...infos) { this.logger.trace(symbolLogDone, ...arguments); }
+	/**
+	  * 调试（debug、行内更新结束）
+	  * - 用于`频率不高`的`经历过计算`的数据跟踪
+	  * - 如某个函数的结果、不重要的心跳回复等
+	  * - 颜色：cyan
+	  * @param {any} where 在哪里发生
+	  * @param {any} where 在做什么
+	  * @param {any[]} infos 日志内容。第一个内容不换行，第二个内容开始换行并缩进
+	  */
+	// eslint-disable-next-line no-unused-vars
+	debugD(where, what, ...infos) { this.logger.debug(symbolLogDone, ...arguments); }
+	/**
+	 * 信息（info、行内更新结束）
+	 * - 用于常规的业务摘要或`非正常但非异常`的数据记录
+	 * - 颜色：green
+	 * @param {any} where 在哪里发生
+	 * @param {any} where 在做什么
+	 * @param {any[]} infos 日志内容。第一个内容不换行，第二个内容开始换行并缩进
+	 */
+	// eslint-disable-next-line no-unused-vars
+	infoD(where, what, ...infos) { this.logger.info(symbolLogDone, ...arguments); }
+	/**
+	 * 警告（warn、行内更新结束）
+	 * - 用于`有可能`导致异常的运行记录
+	 * - 如程序启动时，数据库测试连接超时，但程序认为可以稍后再次测试
+	 * - 颜色：yellow
+	 * @param {any} where 在哪里发生
+	 * @param {any} where 在做什么
+	 * @param {any[]} infos 日志内容。第一个内容不换行，第二个内容开始换行并缩进
+	 */
+	// eslint-disable-next-line no-unused-vars
+	warnD(where, what, ...infos) { this.logger.warn(symbolLogDone, ...arguments); }
+	/**
+	 * 错误（error、行内更新结束）
+	 * - 用于`异常`逻辑、`错误`数据的运行记录
+	 * - 如业务运行时，数据库运行失败。必要字段为空导致业务中止等
+	 * - 颜色：red
+	 * @param {any} where 在哪里发生
+	 * @param {any} where 在做什么
+	 * @param {any[]} infos 日志内容。第一个内容不换行，第二个内容开始换行并缩进
+	 */
+	// eslint-disable-next-line no-unused-vars
+	errorD(where, what, ...infos) { this.logger.error(symbolLogDone, ...arguments); }
+	/**
+	 * 致命（fatal、行内更新结束）
+	 * - 用于可能导致`程序退出`的严重的运行记录
+	 * - 如未捕获的异常、意外的文件读写
+	 * - 颜色：magenta
+	 * @param {any} where 在哪里发生
+	 * @param {any} where 在做什么
+	 * @param {any[]} infos 日志内容。第一个内容不换行，第二个内容开始换行并缩进
+	 */
+	// eslint-disable-next-line no-unused-vars
+	fatalD(where, what, ...infos) { this.logger.fatal(symbolLogDone, ...arguments); }
+	/**
+	 * 标记（mark、行内更新结束）
+	 * - 最高级的日记记录，通常用于无关运行情况的必要的说明
+	 * - 除非关闭日志，否则都会输出日志
+	 * - 如版权说明、注意事项等
+	 * - 颜色：grey
+	 * @param {any} where 在哪里发生
+	 * @param {any} where 在做什么
+	 * @param {any[]} infos 日志内容。第一个内容不换行，第二个内容开始换行并缩进
+	 */
+	// eslint-disable-next-line no-unused-vars
+	markD(where, what, ...infos) { this.logger.mark(symbolLogDone, ...arguments); }
 };
 
 
