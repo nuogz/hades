@@ -1,13 +1,18 @@
-import { join } from 'path';
+import { readFileSync } from 'fs';
+import { join, dirname, resolve } from 'path';
+import { fileURLToPath } from 'url';
 
 import Log4JS from 'log4js';
 
-import formatLog from './lib/formatLog.js';
+import initFormatLog from './lib/formatLog.js';
 import configureFile from './lib/FileAppender.js';
 import configureConsole from './lib/ConsoleAppender.js';
 
 import symbolLogUpdate from './lib/LogUpdateSymbol.js';
 import symbolLogDone from './lib/LogDoneSymbol.js';
+
+
+const dirLib = dirname(fileURLToPath(import.meta.url));
 
 
 /**
@@ -34,7 +39,7 @@ export const configure = {
 
 
 /**
- * 是否已经加载过任意日志器（全局）
+ * 是否已经加载过任意Hades（全局）
  * @type {boolean}
  */
 export let hasFirstInited = false;
@@ -52,7 +57,7 @@ export let hasFirstInited = false;
  *   - error: 错误
  *   - fatal: 致命
  *   - mark: 标记
- * @version 3.2.0-2021.08.17.03
+ * @version 3.3.0-2021.08.18.01
  * @class
  * @requires chalk(4)
  * @requires log-update(4)
@@ -89,10 +94,21 @@ const Hades = class Hades {
 		 */
 		this.isHightlight = option?.isHightlight ?? true;
 		/**
-		 * 是否使用彩色编码保存日志
+		 * 是否输出初始化结果
 		 * @type {boolean}
 		 */
 		this.isLogInited = option?.isLogInited ?? true;
+		/**
+		 * 日志语言
+		 * @type {boolean}
+		 */
+		this.lang = option?.lang ?? 'zh_cn';
+
+		/**
+		 * 日志辞典
+		 * @type {boolean}
+		 */
+		this.langs = JSON.parse(readFileSync(resolve(dirLib, 'lang', `${this.lang}.json`), 'utf8'));
 
 		/**
 		 * 是否已经
@@ -107,7 +123,9 @@ const Hades = class Hades {
 	 * 初始化日志
 	 */
 	init() {
-		const { name, level, pathSave, isHightlight } = this;
+		const { name, level, pathSave, langs, isHightlight, isLogInited } = this;
+
+		const formatLog = initFormatLog(langs);
 
 		const keyAppenderConsole = `${name}-Console`;
 		const keyAppenderFile = `${name}-File`;
@@ -140,18 +158,19 @@ const Hades = class Hades {
 		};
 
 
-		this.logger = Log4JS.configure(configure).getLogger(this.name);
+		this.logger = Log4JS.configure(configure).getLogger(name);
 
 		this.isInited = true;
 		hasFirstInited = true;
 
 
-		if(this.isLogInited) {
+		if(isLogInited) {
+
 			if(pathSave) {
-				this.info('日志', '加载', '✔ ', `日志路径{${pathSave}}`);
+				this.info(langs.Hades, langs.init, '✔ ', `${langs.path}~{${pathSave}}`);
 			}
 			else {
-				this.info('日志', '加载', '✔ ');
+				this.info(langs.Hades, langs.init, '✔ ');
 			}
 		}
 
@@ -257,7 +276,7 @@ const Hades = class Hades {
 
 
 	/**
-	 * 跟踪（trace、行内更新）
+	 * 记录`跟踪`日志，并标记行内更新
 	 * - 用于`可能大量`显示的底层的数据跟踪
 	 * - 如循环中的循环量的`i`等
 	 * - 不应在生产环境中使用，也不应出现在提交的代码中，通常调试后立即删除
@@ -269,7 +288,7 @@ const Hades = class Hades {
 	// eslint-disable-next-line no-unused-vars
 	traceU(where, what, ...infos) { this.logger.trace(symbolLogUpdate, ...arguments); }
 	/**
-	  * 调试（debug、行内更新）
+	  * 记录`调试`日志，并标记行内更新
 	  * - 用于`频率不高`的`经历过计算`的数据跟踪
 	  * - 如某个函数的结果、不重要的心跳回复等
 	  * - 颜色：cyan
@@ -280,7 +299,7 @@ const Hades = class Hades {
 	// eslint-disable-next-line no-unused-vars
 	debugU(where, what, ...infos) { this.logger.debug(symbolLogUpdate, ...arguments); }
 	/**
-	 * 信息（info、行内更新）
+	 * 记录`信息`日志，并标记行内更新
 	 * - 用于常规的业务摘要或`非正常但非异常`的数据记录
 	 * - 颜色：green
 	 * @param {any} where 在哪里发生
@@ -290,7 +309,7 @@ const Hades = class Hades {
 	// eslint-disable-next-line no-unused-vars
 	infoU(where, what, ...infos) { this.logger.info(symbolLogUpdate, ...arguments); }
 	/**
-	 * 警告（warn、行内更新）
+	 * 记录`警告`日志，并标记行内更新
 	 * - 用于`有可能`导致异常的运行记录
 	 * - 如程序启动时，数据库测试连接超时，但程序认为可以稍后再次测试
 	 * - 颜色：yellow
@@ -301,7 +320,7 @@ const Hades = class Hades {
 	// eslint-disable-next-line no-unused-vars
 	warnU(where, what, ...infos) { this.logger.warn(symbolLogUpdate, ...arguments); }
 	/**
-	 * 错误（error、行内更新）
+	 * 记录`错误`日志，并标记行内更新
 	 * - 用于`异常`逻辑、`错误`数据的运行记录
 	 * - 如业务运行时，数据库运行失败。必要字段为空导致业务中止等
 	 * - 颜色：red
@@ -312,7 +331,7 @@ const Hades = class Hades {
 	// eslint-disable-next-line no-unused-vars
 	errorU(where, what, ...infos) { this.logger.error(symbolLogUpdate, ...arguments); }
 	/**
-	 * 致命（fatal、行内更新）
+	 * 记录`致命`日志，并标记行内更新
 	 * - 用于可能导致`程序退出`的严重的运行记录
 	 * - 如未捕获的异常、意外的文件读写
 	 * - 颜色：magenta
@@ -323,7 +342,7 @@ const Hades = class Hades {
 	// eslint-disable-next-line no-unused-vars
 	fatalU(where, what, ...infos) { this.logger.fatal(symbolLogUpdate, ...arguments); }
 	/**
-	 * 标记（mark、行内更新）
+	 * 记录`标记`日志，并标记行内更新
 	 * - 最高级的日记记录，通常用于无关运行情况的必要的说明
 	 * - 除非关闭日志，否则都会输出日志
 	 * - 如版权说明、注意事项等
@@ -337,7 +356,7 @@ const Hades = class Hades {
 
 
 	/**
-	 * 跟踪（trace、行内更新结束）
+	 * 记录`跟踪`日志，并标记行内更新结束
 	 * - 用于`可能大量`显示的底层的数据跟踪
 	 * - 如循环中的循环量的`i`等
 	 * - 不应在生产环境中使用，也不应出现在提交的代码中，通常调试后立即删除
@@ -349,7 +368,7 @@ const Hades = class Hades {
 	// eslint-disable-next-line no-unused-vars
 	traceD(where, what, ...infos) { this.logger.trace(symbolLogDone, ...arguments); }
 	/**
-	  * 调试（debug、行内更新结束）
+	  * 记录`调试`日志，并标记行内更新结束
 	  * - 用于`频率不高`的`经历过计算`的数据跟踪
 	  * - 如某个函数的结果、不重要的心跳回复等
 	  * - 颜色：cyan
@@ -360,7 +379,7 @@ const Hades = class Hades {
 	// eslint-disable-next-line no-unused-vars
 	debugD(where, what, ...infos) { this.logger.debug(symbolLogDone, ...arguments); }
 	/**
-	 * 信息（info、行内更新结束）
+	 * 记录`信息`日志，并标记行内更新结束
 	 * - 用于常规的业务摘要或`非正常但非异常`的数据记录
 	 * - 颜色：green
 	 * @param {any} where 在哪里发生
@@ -370,7 +389,7 @@ const Hades = class Hades {
 	// eslint-disable-next-line no-unused-vars
 	infoD(where, what, ...infos) { this.logger.info(symbolLogDone, ...arguments); }
 	/**
-	 * 警告（warn、行内更新结束）
+	 * 记录`警告`日志，并标记行内更新结束
 	 * - 用于`有可能`导致异常的运行记录
 	 * - 如程序启动时，数据库测试连接超时，但程序认为可以稍后再次测试
 	 * - 颜色：yellow
@@ -381,7 +400,7 @@ const Hades = class Hades {
 	// eslint-disable-next-line no-unused-vars
 	warnD(where, what, ...infos) { this.logger.warn(symbolLogDone, ...arguments); }
 	/**
-	 * 错误（error、行内更新结束）
+	 * 记录`错误`日志，并标记行内更新结束
 	 * - 用于`异常`逻辑、`错误`数据的运行记录
 	 * - 如业务运行时，数据库运行失败。必要字段为空导致业务中止等
 	 * - 颜色：red
@@ -392,7 +411,7 @@ const Hades = class Hades {
 	// eslint-disable-next-line no-unused-vars
 	errorD(where, what, ...infos) { this.logger.error(symbolLogDone, ...arguments); }
 	/**
-	 * 致命（fatal、行内更新结束）
+	 * 记录`致命`日志，并标记行内更新结束
 	 * - 用于可能导致`程序退出`的严重的运行记录
 	 * - 如未捕获的异常、意外的文件读写
 	 * - 颜色：magenta
@@ -403,7 +422,7 @@ const Hades = class Hades {
 	// eslint-disable-next-line no-unused-vars
 	fatalD(where, what, ...infos) { this.logger.fatal(symbolLogDone, ...arguments); }
 	/**
-	 * 标记（mark、行内更新结束）
+	 * 记录`标记`日志，并标记行内更新结束
 	 * - 最高级的日记记录，通常用于无关运行情况的必要的说明
 	 * - 除非关闭日志，否则都会输出日志
 	 * - 如版权说明、注意事项等
@@ -414,6 +433,26 @@ const Hades = class Hades {
 	 */
 	// eslint-disable-next-line no-unused-vars
 	markD(where, what, ...infos) { this.logger.mark(symbolLogDone, ...arguments); }
+
+	/**
+	 * 记录`致命`日志，并退出程序
+	 * - 用于可能导致`程序退出`的严重的运行记录
+	 * - 如未捕获的异常、意外的文件读写
+	 * - 颜色：magenta
+	 * @param {number} code 退出代码
+	 * @param {any} where 在哪里发生
+	 * @param {any} where 在做什么
+	 * @param {any[]} infos 日志内容。第一个内容不换行，第二个内容开始换行并缩进
+	 */
+	// eslint-disable-next-line no-unused-vars
+	fatalE(code, where, what, ...infos) {
+		const args = [...arguments];
+		args.shift();
+
+		this.logger.fatal(symbolLogDone, ...args);
+
+		process.exit(code);
+	}
 };
 
 
