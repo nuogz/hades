@@ -57,7 +57,7 @@ export let hasFirstInited = false;
  *   - error: 错误
  *   - fatal: 致命
  *   - mark: 标记
- * @version 3.3.0-2021.08.18.01
+ * @version 3.3.1-2021.08.24.01
  * @class
  * @requires chalk(4)
  * @requires log-update(4)
