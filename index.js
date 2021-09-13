@@ -1,5 +1,5 @@
-import { readFileSync } from 'fs';
-import { join, dirname, resolve } from 'path';
+import { readdirSync, readFileSync } from 'fs';
+import { join, dirname, resolve, parse } from 'path';
 import { fileURLToPath } from 'url';
 
 import Log4JS from 'log4js';
@@ -12,7 +12,10 @@ import symbolLogUpdate from './lib/LogUpdateSymbol.js';
 import symbolLogDone from './lib/LogDoneSymbol.js';
 
 
-const dirLib = dirname(fileURLToPath(import.meta.url));
+const dirAPP = dirname(fileURLToPath(import.meta.url));
+const dirLang = resolve(dirAPP, 'lang');
+
+const langsSupport = readdirSync(dirLang).map(path => parse(path).name);
 
 
 /**
@@ -57,7 +60,7 @@ export let hasFirstInited = false;
  *   - error: 错误
  *   - fatal: 致命
  *   - mark: 标记
- * @version 3.4.0-2021.09.13.01
+ * @version 3.5.0-2021.09.13.01
  * @class
  * @requires chalk(4)
  * @requires log-update(4)
@@ -110,10 +113,11 @@ const Hades = class Hades {
 		this.lang = option?.lang ?? 'zh_cn';
 
 		/**
-		 * 日志辞典
+		 * 日志字典
 		 * @type {boolean}
 		 */
-		this.langs = JSON.parse(readFileSync(resolve(dirLib, 'lang', `${this.lang}.json`), 'utf8'));
+		this.langs = JSON.parse(readFileSync(resolve(dirLang, `${this.lang}.json`), 'utf8'));
+
 
 		/**
 		 * 是否已经
@@ -123,6 +127,12 @@ const Hades = class Hades {
 
 		if(!hasFirstInited) { this.init(); }
 	}
+
+	/**
+	 * 可用字典
+	 * @type {string[]}
+	 */
+	static get langsSupport() { return langsSupport; }
 
 	/**
 	 * 初始化日志
