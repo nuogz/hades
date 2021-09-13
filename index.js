@@ -57,7 +57,7 @@ export let hasFirstInited = false;
  *   - error: 错误
  *   - fatal: 致命
  *   - mark: 标记
- * @version 3.3.1-2021.08.24.01
+ * @version 3.4.0-2021.09.13.01
  * @class
  * @requires chalk(4)
  * @requires log-update(4)
@@ -99,6 +99,11 @@ const Hades = class Hades {
 		 */
 		this.isLogInited = option?.isLogInited ?? true;
 		/**
+		 * 是否输出日志位置
+		 * @type {boolean}
+		 */
+		this.isLogPathSave = option?.isLogPathSave ?? false;
+		/**
 		 * 日志语言
 		 * @type {boolean}
 		 */
@@ -123,7 +128,7 @@ const Hades = class Hades {
 	 * 初始化日志
 	 */
 	init() {
-		const { name, level, pathSave, langs, isHightlight, isLogInited } = this;
+		const { name, level, pathSave, langs, isHightlight, isLogInited, isLogPathSave } = this;
 
 		const formatLog = initFormatLog(langs);
 
@@ -165,8 +170,7 @@ const Hades = class Hades {
 
 
 		if(isLogInited) {
-
-			if(pathSave) {
+			if(pathSave && isLogPathSave) {
 				this.info(langs.Hades, langs.init, '✔ ', `${langs.path}~{${pathSave}}`);
 			}
 			else {
