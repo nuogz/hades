@@ -74,7 +74,7 @@ const parseFlagsEnv = () => {
  *   - error: 错误
  *   - fatal: 致命
  *   - mark: 标记
- * @version 4.0.1-2022.04.01.02
+ * @version 4.0.2-2022.04.01.03
  * @class
  * @requires chalk(4)
  * @requires log-update(4)
