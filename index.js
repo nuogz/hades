@@ -1,10 +1,12 @@
-import { readdirSync, readFileSync } from 'fs';
-import { join, dirname, resolve, parse } from 'path';
-import { fileURLToPath } from 'url';
+import './lib/init.js';
+
+import { resolve } from 'path';
 
 import Log4JS from 'log4js';
 
-import initFormatLog from './lib/formatLog.js';
+import T, { localesSupport } from './lib/global/i18n.js';
+
+import formatLog from './lib/formatLog.js';
 import configureFile from './lib/FileAppender.js';
 import configureConsole from './lib/ConsoleAppender.js';
 
@@ -12,40 +14,53 @@ import symbolLogUpdate from './lib/LogUpdateSymbol.js';
 import symbolLogDone from './lib/LogDoneSymbol.js';
 
 
-const dirAPP = dirname(fileURLToPath(import.meta.url));
-const dirLang = resolve(dirAPP, 'lang');
-
-const langsSupport = readdirSync(dirLang).map(path => parse(path).name);
-
-
 /**
  * 接口配置
- * @typedef {Object} HadesConfig
- * @property {boolean} isHightlight 是否使用彩色编码保存日志
- * @property {boolean} isLogInited 是否在加载后立即输出日志
+ * @typedef {Object} HadesOption
+ * @property {number} sizeLogFileMax 单个日志文件最大尺寸
+ * @property {boolean} isHighlight 是否使用彩色编码保存日志
+ * @property {boolean} isOutputInited 是否输出初始化结果
+ * @property {boolean} isOutputDirLog 是否输出日志位置
+ * @property {boolean} isInitImmediate 是否立即加载日志
+ * @property {string} locale 日志语言
  */
 
 
 /**
  * Log4JS 总配置
- * @type {Object}
+ * @type {Log4JS.Configuration}
  */
-export const configure = {
+export const configureStatic = {
 	appenders: {
 		default: { type: 'console' }
 	},
 	categories: {
 		default: { appenders: ['default'], level: 'off' }
 	},
-	pm2: true
+	pm2: true,
 };
 
 
-/**
- * 是否已经加载过任意Hades（全局）
- * @type {boolean}
- */
-export let hasFirstInited = false;
+const parseFlagsEnv = () => {
+	let textRaw = process.env.HADES_OPTIONS;
+
+	if(textRaw !== undefined && !textRaw.trim()) { return {}; }
+
+
+	const flagsRaw = textRaw.split(',');
+
+	const flagHighlight = flagsRaw.find(f => /^!?Highlight$/i.test(f));
+	const flagOutputInited = flagsRaw.find(f => /^!?OutputInited$/i.test(f));
+	const flagOutputDirLog = flagsRaw.find(f => /^!?OutputDirLog$/i.test(f));
+	const flagInitImmediate = flagsRaw.find(f => /^!?InitImmediate$/i.test(f));
+
+	return {
+		isHighlight: flagHighlight === undefined ? void 0 : !flagHighlight.startsWith('!'),
+		isOutputInited: flagOutputInited === undefined ? void 0 : !flagOutputInited.startsWith('!'),
+		isOutputDirLog: flagOutputDirLog === undefined ? void 0 : !flagOutputDirLog.startsWith('!'),
+		isInitImmediate: flagInitImmediate === undefined ? void 0 : !flagInitImmediate.startsWith('!'),
+	};
+};
 
 
 /**
@@ -60,7 +75,7 @@ export let hasFirstInited = false;
  *   - error: 错误
  *   - fatal: 致命
  *   - mark: 标记
- * @version 3.5.0-2021.09.13.01
+ * @version 4.0.0-2022.04.01.01
  * @class
  * @requires chalk(4)
  * @requires log-update(4)
@@ -69,124 +84,171 @@ export let hasFirstInited = false;
  */
 const Hades = class Hades {
 	/**
-	 * @param {string} nameLog 日志名称
-	 * @param {string} levelLog 日志等级
-	 * @param {string} pathSave 保存路径
-	 * @param {HadesConfig} option 日志选项
-	 * @returns {import('log4js').Logger} Logger，日志系统自身
+	 * 日志名称
+	 * @type {string}
 	 */
-	constructor(name = 'default', level = 'all', pathSave = null, option) {
-		/**
-		 * 日志名称
-		 *  @type {string}
-		 */
-		this.name = name;
-		/**
-		 * 日志等级
-		 *  @type {string}
-		 */
-		this.level = level;
-		/**
-		 * 保存路径
-		 *  @type {string}
-		 */
-		this.pathSave = pathSave;
-		/**
-		 * 是否使用彩色编码保存日志
-		 * @type {boolean}
-		 */
-		this.isHightlight = option?.isHightlight ?? true;
-		/**
-		 * 是否输出初始化结果
-		 * @type {boolean}
-		 */
-		this.isLogInited = option?.isLogInited ?? true;
-		/**
-		 * 是否输出日志位置
-		 * @type {boolean}
-		 */
-		this.isLogPathSave = option?.isLogPathSave ?? false;
-		/**
-		 * 日志语言
-		 * @type {boolean}
-		 */
-		this.lang = option?.lang ?? 'zh_cn';
+	name;
+	/**
+	 * 日志等级
+	 * @type {string}
+	 */
+	level;
+	/**
+	 * 日志存储文件夹
+	 * @type {string}
+	 */
+	dirLog;
+	/**
+	 * 单个日志文件最大尺寸
+	 * @type {string}
+	 */
+	sizeLogFileMax;
 
-		/**
-		 * 日志字典
-		 * @type {boolean}
-		 */
-		this.langs = JSON.parse(readFileSync(resolve(dirLang, `${this.lang}.json`), 'utf8'));
-
-
-		/**
-		 * 是否已经
-		 * @type {boolean}
-		 */
-		this.isInited = false;
-
-		if(!hasFirstInited) { this.init(); }
-	}
 
 	/**
-	 * 可用字典
+	 * 是否使用彩色编码保存日志
+	 * @type {boolean}
+	 */
+	isHighlight;
+	/**
+	 * 是否输出初始化结果
+	 * @type {boolean}
+	 */
+	isOutputInited;
+	/**
+	 * 是否输出日志位置
+	 * @type {boolean}
+	 */
+	isOutputDirLog;
+	/**
+	 * 是否立即加载日志
+	 * @type {boolean}
+	 */
+	isInitImmediate;
+	/**
+	 * 是否已经加载日志
+	 * @type {boolean}
+	 */
+	isInited = false;
+
+
+	/**
+	 * 可用语言
 	 * @type {string[]}
 	 */
-	static get langsSupport() { return langsSupport; }
+	static localesSupport = localesSupport;
 
 	/**
-	 * 初始化日志
+	 * 日志语言
+	 * @type {string}
 	 */
+	locale;
+
+	/**
+	 * 获取翻译
+	 */
+	T(key, options = {}) {
+		return T(key, Object.assign(JSON.copy(options), { lng: this.locale }));
+	}
+
+
+	/**
+	 * Log4JS的日志器
+	 * @type {Log4JS.Logger}
+	 */
+	logger;
+
+
+	/**
+	 * @param {string} [name] 日志名称
+	 * @param {string} [level] 日志等级
+	 * @param {string} [dirLog] 保存路径
+	 * @param {HadesOption} [option] 日志选项
+	 * @returns {Log4JS.Logger} Logger，日志系统自身
+	 */
+	constructor(name, level, dirLog, option) {
+		const env = process.env;
+
+		this.name = name ?? 'default';
+		this.level = level ?? env.HADES_LEVEL ?? 'all';
+		this.dirLog = dirLog ?? env.HADES_DIR_LOG;
+
+		this.sizeLogFileMax = option?.sizeLogFileMax ?? 1024 * 1024 * 20;
+
+		const flags = parseFlagsEnv();
+
+		this.isHighlight = option?.isHighlight ?? flags.isHighlight ?? true;
+		this.isOutputInited = option?.isOutputInited ?? flags.isOutputInited ?? true;
+		this.isOutputDirLog = option?.isOutputDirLog ?? flags.isOutputDirLog ?? false;
+		this.isInitImmediate = option?.isInitImmediate ?? flags.isInitImmediate ?? true;
+
+		this.locale = option?.locale ?? 'zh';
+
+
+		if(this.isInitImmediate) { this.init(); }
+	}
+
+
+	/** 初始化 */
 	init() {
-		const { name, level, pathSave, langs, isHightlight, isLogInited, isLogPathSave } = this;
+		const { name, level, dirLog, isHighlight, isOutputInited, isOutputDirLog } = this;
 
-		const formatLog = initFormatLog(langs);
 
-		const keyAppenderConsole = `${name}-Console`;
-		const keyAppenderFile = `${name}-File`;
-		const keyAppenderFileStack = `${name}-FileStack`;
+		const configure = JSON.copy(configureStatic);
+		const appenders = [];
 
-		configure.appenders[keyAppenderConsole] = {
+
+		const nameAppenderConsole = `${name}-console`;
+		configure.appenders[nameAppenderConsole] = {
 			type: { configure: configureConsole },
-			isHightlight,
-			handle: formatLog,
+			isHighlight,
+			T: this.T.bind(this),
+			handle: (event, isHighlight, T) => formatLog(event, isHighlight, T),
 		};
-		configure.appenders[keyAppenderFile] = {
-			type: { configure: configureFile },
-			path: join(pathSave, name + '.log'),
-			isHightlight, maxLogSize: 1024 * 1024 * 20, eol: '\n',
-			handle: (event, isHightlight) => formatLog(event, isHightlight)[0],
-		};
-		configure.appenders[keyAppenderFileStack] = {
-			type: { configure: configureFile },
-			path: join(pathSave, name + '.stack.log'),
-			isHightlight, maxLogSize: 1024 * 1024 * 20, eol: '\n',
-			handle: (event, isHightlight) => formatLog(event, isHightlight)[1],
-		};
+		appenders.push(nameAppenderConsole);
 
 
-		configure.categories[name] = {
-			appenders: pathSave ?
-				[keyAppenderConsole, keyAppenderFile, keyAppenderFileStack] :
-				[keyAppenderConsole],
-			level
-		};
+		if(dirLog) {
+			const nameAppenderFile = `${name}-file`;
+			configure.appenders[nameAppenderFile] = {
+				type: { configure: configureFile },
+				path: resolve(dirLog, name + '.log'),
+				isHighlight, maxLogSize: this.sizeLogFileMax, eol: '\n',
+				T: this.T.bind(this),
+				handle: (event, isHighlight, T) => formatLog(event, isHighlight, T)[0],
+			};
+			appenders.push(nameAppenderFile);
+
+
+			const nameAppenderFileStack = `${name}-file-stack`;
+			configure.appenders[nameAppenderFileStack] = {
+				type: { configure: configureFile },
+				path: resolve(dirLog, name + '.stack.log'),
+				isHighlight, maxLogSize: this.sizeLogFileMax, eol: '\n',
+				T: this.T.bind(this),
+				handle: (event, isHighlight, T) => formatLog(event, isHighlight, T)[1],
+			};
+			appenders.push(nameAppenderFileStack);
+		}
+
+
+		configure.categories[name] = { appenders, level };
 
 
 		this.logger = Log4JS.configure(configure).getLogger(name);
 
 		this.isInited = true;
-		hasFirstInited = true;
 
 
-		if(isLogInited) {
-			if(pathSave && isLogPathSave) {
-				this.info(langs.Hades, langs.init, '✔ ', `${langs.path}~{${pathSave}}`);
+		if(isOutputInited) {
+			if(dirLog && isOutputDirLog) {
+				this.info(this.T('name'), this.T('init'), '✔ ', `${this.T('init')}~{${dirLog}}`);
 			}
 			else {
-				this.info(langs.Hades, langs.init, '✔ ');
+				this.info(this.T('name'), this.T('init'), '✔ ');
 			}
 		}
+
 
 		return this;
 	}
@@ -200,6 +262,7 @@ const Hades = class Hades {
 		);
 	}
 
+
 	/**
 	 * 控制台输出更新标记
 	 */
@@ -208,6 +271,7 @@ const Hades = class Hades {
 	 * 控制台输出更新结束标记
 	 */
 	get symbolLogDone() { return symbolLogDone; }
+
 
 	/**
 	 * 跟踪（trace）
@@ -219,7 +283,6 @@ const Hades = class Hades {
 	 * @param {any} where 在做什么
 	 * @param {any[]} infos 日志内容。第一个内容不换行，第二个内容开始换行并缩进
 	  */
-	// eslint-disable-next-line no-unused-vars
 	trace(where, what, ...infos) { this.logger.trace(...arguments); }
 	/**
 	  * 调试（debug）
@@ -230,7 +293,6 @@ const Hades = class Hades {
 	  * @param {any} where 在做什么
 	  * @param {any[]} infos 日志内容。第一个内容不换行，第二个内容开始换行并缩进
 	  */
-	// eslint-disable-next-line no-unused-vars
 	debug(where, what, ...infos) { this.logger.debug(...arguments); }
 	/**
 	 * 信息（info）
@@ -240,7 +302,6 @@ const Hades = class Hades {
 	 * @param {any} where 在做什么
 	 * @param {any[]} infos 日志内容。第一个内容不换行，第二个内容开始换行并缩进
 	 */
-	// eslint-disable-next-line no-unused-vars
 	info(where, what, ...infos) { this.logger.info(...arguments); }
 	/**
 	 * 警告（warn）
@@ -251,7 +312,6 @@ const Hades = class Hades {
 	 * @param {any} where 在做什么
 	 * @param {any[]} infos 日志内容。第一个内容不换行，第二个内容开始换行并缩进
 	 */
-	// eslint-disable-next-line no-unused-vars
 	warn(where, what, ...infos) { this.logger.warn(...arguments); }
 	/**
 	 * 错误（error）
@@ -262,7 +322,6 @@ const Hades = class Hades {
 	 * @param {any} where 在做什么
 	 * @param {any[]} infos 日志内容。第一个内容不换行，第二个内容开始换行并缩进
 	 */
-	// eslint-disable-next-line no-unused-vars
 	error(where, what, ...infos) { this.logger.error(...arguments); }
 	/**
 	 * 致命（fatal）
@@ -273,7 +332,6 @@ const Hades = class Hades {
 	 * @param {any} where 在做什么
 	 * @param {any[]} infos 日志内容。第一个内容不换行，第二个内容开始换行并缩进
 	 */
-	// eslint-disable-next-line no-unused-vars
 	fatal(where, what, ...infos) { this.logger.fatal(...arguments); }
 	/**
 	 * 标记（mark）
@@ -285,7 +343,6 @@ const Hades = class Hades {
 	 * @param {any} where 在做什么
 	 * @param {any[]} infos 日志内容。第一个内容不换行，第二个内容开始换行并缩进
 	 */
-	// eslint-disable-next-line no-unused-vars
 	mark(where, what, ...infos) { this.logger.mark(...arguments); }
 
 
@@ -299,7 +356,6 @@ const Hades = class Hades {
 	 * @param {any} where 在做什么
 	 * @param {any[]} infos 日志内容。第一个内容不换行，第二个内容开始换行并缩进
 	  */
-	// eslint-disable-next-line no-unused-vars
 	traceU(where, what, ...infos) { this.logger.trace(symbolLogUpdate, ...arguments); }
 	/**
 	  * 记录`调试`日志，并标记行内更新
@@ -310,7 +366,6 @@ const Hades = class Hades {
 	  * @param {any} where 在做什么
 	  * @param {any[]} infos 日志内容。第一个内容不换行，第二个内容开始换行并缩进
 	  */
-	// eslint-disable-next-line no-unused-vars
 	debugU(where, what, ...infos) { this.logger.debug(symbolLogUpdate, ...arguments); }
 	/**
 	 * 记录`信息`日志，并标记行内更新
@@ -320,7 +375,6 @@ const Hades = class Hades {
 	 * @param {any} where 在做什么
 	 * @param {any[]} infos 日志内容。第一个内容不换行，第二个内容开始换行并缩进
 	 */
-	// eslint-disable-next-line no-unused-vars
 	infoU(where, what, ...infos) { this.logger.info(symbolLogUpdate, ...arguments); }
 	/**
 	 * 记录`警告`日志，并标记行内更新
@@ -331,7 +385,6 @@ const Hades = class Hades {
 	 * @param {any} where 在做什么
 	 * @param {any[]} infos 日志内容。第一个内容不换行，第二个内容开始换行并缩进
 	 */
-	// eslint-disable-next-line no-unused-vars
 	warnU(where, what, ...infos) { this.logger.warn(symbolLogUpdate, ...arguments); }
 	/**
 	 * 记录`错误`日志，并标记行内更新
@@ -342,7 +395,6 @@ const Hades = class Hades {
 	 * @param {any} where 在做什么
 	 * @param {any[]} infos 日志内容。第一个内容不换行，第二个内容开始换行并缩进
 	 */
-	// eslint-disable-next-line no-unused-vars
 	errorU(where, what, ...infos) { this.logger.error(symbolLogUpdate, ...arguments); }
 	/**
 	 * 记录`致命`日志，并标记行内更新
@@ -353,7 +405,6 @@ const Hades = class Hades {
 	 * @param {any} where 在做什么
 	 * @param {any[]} infos 日志内容。第一个内容不换行，第二个内容开始换行并缩进
 	 */
-	// eslint-disable-next-line no-unused-vars
 	fatalU(where, what, ...infos) { this.logger.fatal(symbolLogUpdate, ...arguments); }
 	/**
 	 * 记录`标记`日志，并标记行内更新
@@ -365,7 +416,6 @@ const Hades = class Hades {
 	 * @param {any} where 在做什么
 	 * @param {any[]} infos 日志内容。第一个内容不换行，第二个内容开始换行并缩进
 	 */
-	// eslint-disable-next-line no-unused-vars
 	markU(where, what, ...infos) { this.logger.mark(symbolLogUpdate, ...arguments); }
 
 
@@ -379,7 +429,6 @@ const Hades = class Hades {
 	 * @param {any} where 在做什么
 	 * @param {any[]} infos 日志内容。第一个内容不换行，第二个内容开始换行并缩进
 	  */
-	// eslint-disable-next-line no-unused-vars
 	traceD(where, what, ...infos) { this.logger.trace(symbolLogDone, ...arguments); }
 	/**
 	  * 记录`调试`日志，并标记行内更新结束
@@ -390,7 +439,6 @@ const Hades = class Hades {
 	  * @param {any} where 在做什么
 	  * @param {any[]} infos 日志内容。第一个内容不换行，第二个内容开始换行并缩进
 	  */
-	// eslint-disable-next-line no-unused-vars
 	debugD(where, what, ...infos) { this.logger.debug(symbolLogDone, ...arguments); }
 	/**
 	 * 记录`信息`日志，并标记行内更新结束
@@ -400,7 +448,6 @@ const Hades = class Hades {
 	 * @param {any} where 在做什么
 	 * @param {any[]} infos 日志内容。第一个内容不换行，第二个内容开始换行并缩进
 	 */
-	// eslint-disable-next-line no-unused-vars
 	infoD(where, what, ...infos) { this.logger.info(symbolLogDone, ...arguments); }
 	/**
 	 * 记录`警告`日志，并标记行内更新结束
@@ -411,7 +458,6 @@ const Hades = class Hades {
 	 * @param {any} where 在做什么
 	 * @param {any[]} infos 日志内容。第一个内容不换行，第二个内容开始换行并缩进
 	 */
-	// eslint-disable-next-line no-unused-vars
 	warnD(where, what, ...infos) { this.logger.warn(symbolLogDone, ...arguments); }
 	/**
 	 * 记录`错误`日志，并标记行内更新结束
@@ -422,7 +468,6 @@ const Hades = class Hades {
 	 * @param {any} where 在做什么
 	 * @param {any[]} infos 日志内容。第一个内容不换行，第二个内容开始换行并缩进
 	 */
-	// eslint-disable-next-line no-unused-vars
 	errorD(where, what, ...infos) { this.logger.error(symbolLogDone, ...arguments); }
 	/**
 	 * 记录`致命`日志，并标记行内更新结束
@@ -433,7 +478,6 @@ const Hades = class Hades {
 	 * @param {any} where 在做什么
 	 * @param {any[]} infos 日志内容。第一个内容不换行，第二个内容开始换行并缩进
 	 */
-	// eslint-disable-next-line no-unused-vars
 	fatalD(where, what, ...infos) { this.logger.fatal(symbolLogDone, ...arguments); }
 	/**
 	 * 记录`标记`日志，并标记行内更新结束
@@ -445,7 +489,6 @@ const Hades = class Hades {
 	 * @param {any} where 在做什么
 	 * @param {any[]} infos 日志内容。第一个内容不换行，第二个内容开始换行并缩进
 	 */
-	// eslint-disable-next-line no-unused-vars
 	markD(where, what, ...infos) { this.logger.mark(symbolLogDone, ...arguments); }
 
 	/**
@@ -458,7 +501,6 @@ const Hades = class Hades {
 	 * @param {any} where 在做什么
 	 * @param {any[]} infos 日志内容。第一个内容不换行，第二个内容开始换行并缩进
 	 */
-	// eslint-disable-next-line no-unused-vars
 	fatalE(code, where, what, ...infos) {
 		const args = [...arguments];
 		args.shift();

@@ -1,5 +1,5 @@
 {
-	"Hades": "Logger",
+	"name": "Logger",
 	"init": "init",
 	"path": "path",
 	"ALL": "ALL",
@@ -10,5 +10,6 @@
 	"ERROR": "ERROR",
 	"FATAL": "FATAL",
 	"MARK": "MARK",
-	"OFF": "OFF"
+	"OFF": "OFF",
+	"handleTypeError": "[option.handle] must be a Function"
 }

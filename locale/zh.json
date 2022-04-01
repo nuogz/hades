@@ -1,5 +1,5 @@
 {
-	"Hades": "日志",
+	"name": "日志",
 	"init": "加载",
 	"path": "路径",
 	"ALL": "信息",
@@ -10,5 +10,6 @@
 	"ERROR": "错误",
 	"FATAL": "致命",
 	"MARK": "标记",
-	"OFF": "关闭"
+	"OFF": "关闭",
+	"handleTypeError": "[option.handle]必须是函数"
 }
