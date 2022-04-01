@@ -44,8 +44,7 @@ export const configureStatic = {
 const parseFlagsEnv = () => {
 	let textRaw = process.env.HADES_OPTIONS;
 
-	if(textRaw !== undefined && !textRaw.trim()) { return {}; }
-
+	if(textRaw === undefined || !textRaw.trim()) { return {}; }
 
 	const flagsRaw = textRaw.split(',');
 
@@ -75,7 +74,7 @@ const parseFlagsEnv = () => {
  *   - error: 错误
  *   - fatal: 致命
  *   - mark: 标记
- * @version 4.0.0-2022.04.01.01
+ * @version 4.0.1-2022.04.01.02
  * @class
  * @requires chalk(4)
  * @requires log-update(4)
