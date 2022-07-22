@@ -74,14 +74,14 @@ const parseFlagsEnv = () => {
  *   - error: 错误
  *   - fatal: 致命
  *   - mark: 标记
- * @version 4.0.4-2022.04.01.05
+ * @version 4.1.0-2022.07.22.05
  * @class
  * @requires chalk(4)
  * @requires i18next(21)
  * @requires log-update(4)
  * @requires log4js(6)
  * @requires moment(2)
- * @requires streamroller(2)
+ * @requires streamroller(3)
  */
 const Hades = class Hades {
 	/**
