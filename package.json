@@ -1,11 +1,20 @@
 {
 	"name": "@nuogz/hades",
-	"version": "5.0.0",
-	"description": "Log library based on log4js",
+	"version": "5.0.1",
+	"description": "log library based on log4js",
 	"author": "Nuogz",
 	"license": "LGPL-3.0-or-later",
-	"main": "index.js",
+	"main": "./index.js",
 	"type": "module",
+	"repository": {
+		"type": "git",
+		"url": "github:zheung/hades"
+	},
+	"files": [
+		"index.js",
+		"lib/**",
+		"locale/**"
+	],
 	"devDependencies": {
 		"eslint": "^8.21.0"
 	},
