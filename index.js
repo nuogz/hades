@@ -1,10 +1,11 @@
-import './lib/init.js';
-
-import { resolve } from 'path';
+import { dirname, parse, resolve } from 'path';
+import { fileURLToPath } from 'url';
 
 import Log4JS from 'log4js';
 
-import T, { localesSupport } from './lib/global/i18n.js';
+import initI18N from '@nuogz/i18n';
+
+import { copyJSON } from './lib/tool.js';
 
 import formatLog from './lib/formatLog.js';
 import configureFile from './lib/FileAppender.js';
@@ -12,22 +13,29 @@ import configureConsole from './lib/ConsoleAppender.js';
 
 import symbolLogUpdate from './lib/LogUpdateSymbol.js';
 import symbolLogDone from './lib/LogDoneSymbol.js';
+import { readdirSync } from 'fs';
+
+
+
+const dirPackage = dirname(fileURLToPath(import.meta.url));
+const I18N = await initI18N(dirPackage);
+const localesSupport = readdirSync(resolve(dirPackage, 'locale')).filter(path => path.endsWith('.json')).map(path => parse(path).name);
 
 
 /**
- * 接口配置
+ * Hades Option
  * @typedef {Object} HadesOption
- * @property {number} sizeLogFileMax 单个日志文件最大尺寸
- * @property {boolean} isHighlight 是否使用彩色编码保存日志
- * @property {boolean} isOutputInited 是否输出初始化结果
- * @property {boolean} isOutputDirLog 是否输出日志位置
- * @property {boolean} isInitImmediate 是否立即加载日志
- * @property {string} locale 日志语言
+ * @property {number} sizeLogFileMax
+ * @property {boolean} isHighlight
+ * @property {boolean} isOutputInited
+ * @property {boolean} isOutputDirLog
+ * @property {boolean} isInitImmediate
+ * @property {string} locale
  */
 
 
 /**
- * Log4JS 总配置
+ * Log4JS Total Configuration
  * @type {Log4JS.Configuration}
  */
 export const configureStatic = {
@@ -63,109 +71,101 @@ const parseFlagsEnv = () => {
 
 
 /**
- * #### 日志系统（哈迪斯）
- * - 以`在哪里、做什么、结果`为格式的基于`log4js`的日志系统
- * - 不输出错误的堆栈，转而存放在`*.stack.log`
- * - 默认提供七个日志等级：
- *   - trace: 跟踪
- *   - debug: 调试
- *   - info: 信息
- *   - warn: 警告
- *   - error: 错误
- *   - fatal: 致命
- *   - mark: 标记
- * @version 4.1.0-2022.07.22.05
+ * - Log system in the format of `where, what, and result`
+ * - The error stack will not output by default，saved in file `*.stack.log` instead
+ * - 7 log level：
+ *   - trace
+ *   - debug
+ *   - info
+ *   - warn
+ *   - error
+ *   - fatal
+ *   - mark
  * @class
- * @requires chalk(4)
- * @requires i18next(21)
- * @requires log-update(4)
- * @requires log4js(6)
- * @requires moment(2)
- * @requires streamroller(3)
  */
-const Hades = class Hades {
+export default class Hades {
 	/**
-	 * 日志名称
+	 * logger name (file name by default)
 	 * @type {string}
 	 */
 	name;
 	/**
-	 * 日志等级
+	 * log max level
 	 * @type {string}
 	 */
 	level;
 	/**
-	 * 日志存储文件夹
+	 * dir of log saved
 	 * @type {string}
 	 */
 	dirLog;
 	/**
-	 * 单个日志文件最大尺寸
+	 * max size of one log file;
 	 * @type {string}
 	 */
 	sizeLogFileMax;
 
 
 	/**
-	 * 是否使用彩色编码保存日志
+	 * detect use colorful highhight to render logs
 	 * @type {boolean}
 	 */
 	isHighlight;
 	/**
-	 * 是否输出初始化结果
+	 * detect output the initial result after init
 	 * @type {boolean}
 	 */
 	isOutputInited;
 	/**
-	 * 是否输出日志位置
+	 * detect output the dir of logs
 	 * @type {boolean}
 	 */
 	isOutputDirLog;
 	/**
-	 * 是否立即加载日志
+	 * detect init logger immediately when new instance
 	 * @type {boolean}
 	 */
 	isInitImmediate;
 	/**
-	 * 是否已经加载日志
+	 * is inited logger or not
 	 * @type {boolean}
 	 */
 	isInited = false;
 
 
 	/**
-	 * 可用语言
+	 * supported locales
 	 * @type {string[]}
 	 */
 	static localesSupport = localesSupport;
 
 	/**
-	 * 日志语言
+	 * logger locale
 	 * @type {string}
 	 */
 	locale;
 
 	/**
-	 * 获取翻译
+	 * get i18n text
 	 */
 	T(key, options = {}) {
-		return T(key, Object.assign(JSON.copy(options), { lng: this.locale }));
+		return I18N.t(key, Object.assign(copyJSON(options), { lng: this.locale }));
 	}
 
 
 	/**
-	 * Log4JS的日志器
+	 * Log4JS's Logger
 	 * @type {Log4JS.Logger}
 	 */
 	logger;
 
 
 	/**
-	 * @param {string} [name] 日志名称
-	 * @param {string} [level] 日志等级
-	 * @param {string} [dirLog] 保存路径
-	 * @param {HadesOption} [option] 日志选项
-	 * @returns {Log4JS.Logger} Logger，日志系统自身
+	 * @param {string} [name]
+	 * @param {string} [level]
+	 * @param {string} [dirLog]
+	 * @param {HadesOption} [option]
+	 * @returns {Log4JS.Logger}
 	 */
 	constructor(name, level, dirLog, option) {
 		const env = process.env;
@@ -183,19 +183,19 @@ const Hades = class Hades {
 		this.isOutputDirLog = option?.isOutputDirLog ?? flags.isOutputDirLog ?? false;
 		this.isInitImmediate = option?.isInitImmediate ?? flags.isInitImmediate ?? true;
 
-		this.locale = option?.locale ?? 'zh';
+		this.locale = option?.locale;
 
 
 		if(this.isInitImmediate) { this.init(); }
 	}
 
 
-	/** 初始化 */
+	/** init Hades */
 	init() {
 		const { name, level, dirLog, isHighlight, isOutputInited, isOutputDirLog } = this;
 
 
-		const configure = JSON.copy(configureStatic);
+		const configure = copyJSON(configureStatic);
 		const appenders = [];
 
 
@@ -255,7 +255,7 @@ const Hades = class Hades {
 	}
 
 	/**
-	 * 异步重载日志
+	 * reload logger asynchronously
 	 */
 	async reload() {
 		return new Promise((resolve, reject) =>
@@ -265,242 +265,266 @@ const Hades = class Hades {
 
 
 	/**
-	 * 控制台输出更新标记
+	 * the symbol of console line update
 	 */
 	get symbolLogUpdate() { return symbolLogUpdate; }
 	/**
-	 * 控制台输出更新结束标记
+	 * the symbol of console line update ended
 	 */
 	get symbolLogDone() { return symbolLogDone; }
 
 
 	/**
-	 * 跟踪（trace）
-	 * - 用于`可能大量`显示的底层的数据跟踪
-	 * - 如循环中的循环量的`i`等
-	 * - 不应在生产环境中使用，也不应出现在提交的代码中，通常调试后立即删除
-	 * - 颜色：blue
-	 * @param {any} where 在哪里发生
-	 * @param {any} where 在做什么
-	 * @param {any[]} infos 日志内容。第一个内容不换行，第二个内容开始换行并缩进
+	 * trace
+	 * - used to record `low-level` data with `high` frequency
+	 * - such as `i` in loop
+	 * - should not be used in the `production` environment,
+	 *   nor should `submit` any trace code. it is usually deleted immediately after debugging
+	 * - blue color
+	 * @param {any} where
+	 * @param {any} what
+	 * @param {any[]} infos the first content will not wrap, and the second content will wrap with indent
 	  */
 	trace(where, what, ...infos) { this.logger.trace(...arguments); }
 	/**
-	  * 调试（debug）
-	  * - 用于`频率不高`的`经历过计算`的数据跟踪
-	  * - 如某个函数的结果、不重要的心跳回复等
-	  * - 颜色：cyan
-	  * @param {any} where 在哪里发生
-	  * @param {any} where 在做什么
-	  * @param {any[]} infos 日志内容。第一个内容不换行，第二个内容开始换行并缩进
-	  */
+	 * debug
+	 * - used to record `calculation results` with `low` frequency
+	 * - such as the result of a function, or not important heartbeat
+	 * - cyan color
+	 * @param {any} where
+	 * @param {any} what
+	 * @param {any[]} infos the first content will not wrap, and the second content will wrap with indent
+	 */
 	debug(where, what, ...infos) { this.logger.debug(...arguments); }
 	/**
-	 * 信息（info）
-	 * - 用于常规的业务摘要或`非正常但非异常`的数据记录
-	 * - 颜色：green
-	 * @param {any} where 在哪里发生
-	 * @param {any} where 在做什么
-	 * @param {any[]} infos 日志内容。第一个内容不换行，第二个内容开始换行并缩进
+	 * info
+	 * - used to record regular summaries, or expected exception datas that can be handled
+	 * - green color
+	 * @param {any} where
+	 * @param {any} what
+	 * @param {any[]} infos the first content will not wrap, and the second content will wrap with indent
 	 */
 	info(where, what, ...infos) { this.logger.info(...arguments); }
 	/**
-	 * 警告（warn）
-	 * - 用于`有可能`导致异常的运行记录
-	 * - 如程序启动时，数据库测试连接超时，但程序认为可以稍后再次测试
-	 * - 颜色：yellow
-	 * @param {any} where 在哪里发生
-	 * @param {any} where 在做什么
-	 * @param {any[]} infos 日志内容。第一个内容不换行，第二个内容开始换行并缩进
+	 * warn
+	 * - used to record operation datas that may cause exceptions
+	 * - such as the database connection timed out during the startup of the program,
+	 *   but the program can be connected again later
+	 * - yellow color
+	 * @param {any} where
+	 * @param {any} what
+	 * @param {any[]} infos the first content will not wrap, and the second content will wrap with indent
 	 */
 	warn(where, what, ...infos) { this.logger.warn(...arguments); }
 	/**
-	 * 错误（error）
-	 * - 用于`异常`逻辑、`错误`数据的运行记录
-	 * - 如业务运行时，数据库运行失败。必要字段为空导致业务中止等
-	 * - 颜色：red
-	 * @param {any} where 在哪里发生
-	 * @param {any} where 在做什么
-	 * @param {any[]} infos 日志内容。第一个内容不换行，第二个内容开始换行并缩进
+	 * error
+	 * - used to record abnormal logic and unexpected error datas
+	 * - such as when inserting data into the database.
+	 *   but the necessary fields are empty, resulting in business interruption
+	 * - red color
+	 * @param {any} where
+	 * @param {any} what
+	 * @param {any[]} infos the first content will not wrap, and the second content will wrap with indent
 	 */
 	error(where, what, ...infos) { this.logger.error(...arguments); }
 	/**
-	 * 致命（fatal）
-	 * - 用于可能导致`程序退出`的严重的运行记录
-	 * - 如未捕获的异常、意外的文件读写
-	 * - 颜色：magenta
-	 * @param {any} where 在哪里发生
-	 * @param {any} where 在做什么
-	 * @param {any[]} infos 日志内容。第一个内容不换行，第二个内容开始换行并缩进
+	 * fatal
+	 * - used to record critical logs that cause the program to exit
+	 * - such as unhandled exception, unexpected file read and write
+	 * - magenta color
+	 * @param {any} where
+	 * @param {any} what
+	 * @param {any[]} infos the first content will not wrap, and the second content will wrap with indent
 	 */
 	fatal(where, what, ...infos) { this.logger.fatal(...arguments); }
 	/**
-	 * 标记（mark）
-	 * - 最高级的日记记录，通常用于无关运行情况的必要的说明
-	 * - 除非关闭日志，否则都会输出日志
-	 * - 如版权说明、注意事项等
-	 * - 颜色：grey
-	 * @param {any} where 在哪里发生
-	 * @param {any} where 在做什么
-	 * @param {any[]} infos 日志内容。第一个内容不换行，第二个内容开始换行并缩进
+	 * mark
+	 * - used to record the necessary descriptions of unrelated operation conditions
+	 * - unless the log is turned off, it will be output
+	 * - such as copyright description and precautions
+	 * - grey color
+	 * @param {any} where
+	 * @param {any} what
+	 * @param {any[]} infos the first content will not wrap, and the second content will wrap with indent
 	 */
 	mark(where, what, ...infos) { this.logger.mark(...arguments); }
 
 
 	/**
-	 * 记录`跟踪`日志，并标记行内更新
-	 * - 用于`可能大量`显示的底层的数据跟踪
-	 * - 如循环中的循环量的`i`等
-	 * - 不应在生产环境中使用，也不应出现在提交的代码中，通常调试后立即删除
-	 * - 颜色：blue
-	 * @param {any} where 在哪里发生
-	 * @param {any} where 在做什么
-	 * @param {any[]} infos 日志内容。第一个内容不换行，第二个内容开始换行并缩进
+	 * traceU
+	 * - mark as inline update
+	 * - used to record `low-level` data with `high` frequency
+	 * - such as `i` in loop
+	 * - should not be used in the `production` environment,
+	 *   nor should `submit` any trace code. it is usually deleted immediately after debugging
+	 * - blue color
+	 * @param {any} where
+	 * @param {any} what
+	 * @param {any[]} infos the first content will not wrap, and the second content will wrap with indent
 	  */
 	traceU(where, what, ...infos) { this.logger.trace(symbolLogUpdate, ...arguments); }
 	/**
-	  * 记录`调试`日志，并标记行内更新
-	  * - 用于`频率不高`的`经历过计算`的数据跟踪
-	  * - 如某个函数的结果、不重要的心跳回复等
-	  * - 颜色：cyan
-	  * @param {any} where 在哪里发生
-	  * @param {any} where 在做什么
-	  * @param {any[]} infos 日志内容。第一个内容不换行，第二个内容开始换行并缩进
-	  */
+	 * debugU
+	 * - mark as inline update
+	 * - used to record `calculation results` with `low` frequency
+	 * - such as the result of a function, or not important heartbeat
+	 * - cyan color
+	 * @param {any} where
+	 * @param {any} what
+	 * @param {any[]} infos the first content will not wrap, and the second content will wrap with indent
+	 */
 	debugU(where, what, ...infos) { this.logger.debug(symbolLogUpdate, ...arguments); }
 	/**
-	 * 记录`信息`日志，并标记行内更新
-	 * - 用于常规的业务摘要或`非正常但非异常`的数据记录
-	 * - 颜色：green
-	 * @param {any} where 在哪里发生
-	 * @param {any} where 在做什么
-	 * @param {any[]} infos 日志内容。第一个内容不换行，第二个内容开始换行并缩进
+	 * infoU
+	 * - mark as inline update
+	 * - used to record regular summaries, or expected exception datas that can be handled
+	 * - green color
+	 * @param {any} where
+	 * @param {any} what
+	 * @param {any[]} infos the first content will not wrap, and the second content will wrap with indent
 	 */
 	infoU(where, what, ...infos) { this.logger.info(symbolLogUpdate, ...arguments); }
 	/**
-	 * 记录`警告`日志，并标记行内更新
-	 * - 用于`有可能`导致异常的运行记录
-	 * - 如程序启动时，数据库测试连接超时，但程序认为可以稍后再次测试
-	 * - 颜色：yellow
-	 * @param {any} where 在哪里发生
-	 * @param {any} where 在做什么
-	 * @param {any[]} infos 日志内容。第一个内容不换行，第二个内容开始换行并缩进
+	 * warnU
+	 * - mark as inline update
+	 * - used to record operation datas that may cause exceptions
+	 * - such as the database connection timed out during the startup of the program,
+	 *   but the program can be connected again later
+	 * - yellow color
+	 * @param {any} where
+	 * @param {any} what
+	 * @param {any[]} infos the first content will not wrap, and the second content will wrap with indent
 	 */
 	warnU(where, what, ...infos) { this.logger.warn(symbolLogUpdate, ...arguments); }
 	/**
-	 * 记录`错误`日志，并标记行内更新
-	 * - 用于`异常`逻辑、`错误`数据的运行记录
-	 * - 如业务运行时，数据库运行失败。必要字段为空导致业务中止等
-	 * - 颜色：red
-	 * @param {any} where 在哪里发生
-	 * @param {any} where 在做什么
-	 * @param {any[]} infos 日志内容。第一个内容不换行，第二个内容开始换行并缩进
+	 * errorU
+	 * - mark as inline update
+	 * - used to record abnormal logic and unexpected error datas
+	 * - such as when inserting data into the database.
+	 *   but the necessary fields are empty, resulting in business interruption
+	 * - red color
+	 * @param {any} where
+	 * @param {any} what
+	 * @param {any[]} infos the first content will not wrap, and the second content will wrap with indent
 	 */
 	errorU(where, what, ...infos) { this.logger.error(symbolLogUpdate, ...arguments); }
 	/**
-	 * 记录`致命`日志，并标记行内更新
-	 * - 用于可能导致`程序退出`的严重的运行记录
-	 * - 如未捕获的异常、意外的文件读写
-	 * - 颜色：magenta
-	 * @param {any} where 在哪里发生
-	 * @param {any} where 在做什么
-	 * @param {any[]} infos 日志内容。第一个内容不换行，第二个内容开始换行并缩进
+	 * fatalU
+	 * - mark as inline update
+	 * - used to record critical logs that cause the program to exit
+	 * - such as unhandled exception, unexpected file read and write
+	 * - magenta color
+	 * @param {any} where
+	 * @param {any} what
+	 * @param {any[]} infos the first content will not wrap, and the second content will wrap with indent
 	 */
 	fatalU(where, what, ...infos) { this.logger.fatal(symbolLogUpdate, ...arguments); }
 	/**
-	 * 记录`标记`日志，并标记行内更新
-	 * - 最高级的日记记录，通常用于无关运行情况的必要的说明
-	 * - 除非关闭日志，否则都会输出日志
-	 * - 如版权说明、注意事项等
-	 * - 颜色：grey
-	 * @param {any} where 在哪里发生
-	 * @param {any} where 在做什么
-	 * @param {any[]} infos 日志内容。第一个内容不换行，第二个内容开始换行并缩进
+	 * markU
+	 * - mark as inline update
+	 * - used to record the necessary descriptions of unrelated operation conditions
+	 * - unless the log is turned off, it will be output
+	 * - such as copyright description and precautions
+	 * - grey color
+	 * @param {any} where
+	 * @param {any} what
+	 * @param {any[]} infos the first content will not wrap, and the second content will wrap with indent
 	 */
 	markU(where, what, ...infos) { this.logger.mark(symbolLogUpdate, ...arguments); }
 
 
 	/**
-	 * 记录`跟踪`日志，并标记行内更新结束
-	 * - 用于`可能大量`显示的底层的数据跟踪
-	 * - 如循环中的循环量的`i`等
-	 * - 不应在生产环境中使用，也不应出现在提交的代码中，通常调试后立即删除
-	 * - 颜色：blue
-	 * @param {any} where 在哪里发生
-	 * @param {any} where 在做什么
-	 * @param {any[]} infos 日志内容。第一个内容不换行，第二个内容开始换行并缩进
+	 * traceD
+	 * - mark as inline update ended
+	 * - used to record `low-level` data with `high` frequency
+	 * - such as `i` in loop
+	 * - should not be used in the `production` environment,
+	 *   nor should `submit` any trace code. it is usually deleted immediately after debugging
+	 * - blue color
+	 * @param {any} where
+	 * @param {any} what
+	 * @param {any[]} infos the first content will not wrap, and the second content will wrap with indent
 	  */
 	traceD(where, what, ...infos) { this.logger.trace(symbolLogDone, ...arguments); }
 	/**
-	  * 记录`调试`日志，并标记行内更新结束
-	  * - 用于`频率不高`的`经历过计算`的数据跟踪
-	  * - 如某个函数的结果、不重要的心跳回复等
-	  * - 颜色：cyan
-	  * @param {any} where 在哪里发生
-	  * @param {any} where 在做什么
-	  * @param {any[]} infos 日志内容。第一个内容不换行，第二个内容开始换行并缩进
+	  * debugD
+	 * - mark as inline update ended
+	 * - used to record `calculation results` with `low` frequency
+	 * - such as the result of a function, or not important heartbeat
+	 * - cyan color
+	 * @param {any} where
+	  * @param {any} what
+	  * @param {any[]} infos the first content will not wrap, and the second content will wrap with indent
 	  */
 	debugD(where, what, ...infos) { this.logger.debug(symbolLogDone, ...arguments); }
 	/**
-	 * 记录`信息`日志，并标记行内更新结束
-	 * - 用于常规的业务摘要或`非正常但非异常`的数据记录
-	 * - 颜色：green
-	 * @param {any} where 在哪里发生
-	 * @param {any} where 在做什么
-	 * @param {any[]} infos 日志内容。第一个内容不换行，第二个内容开始换行并缩进
+	 * infoD
+	 * - mark as inline update ended
+	 * - used to record regular summaries, or expected exception datas that can be handled
+	 * - green color
+	 * @param {any} where
+	 * @param {any} what
+	 * @param {any[]} infos the first content will not wrap, and the second content will wrap with indent
 	 */
 	infoD(where, what, ...infos) { this.logger.info(symbolLogDone, ...arguments); }
 	/**
-	 * 记录`警告`日志，并标记行内更新结束
-	 * - 用于`有可能`导致异常的运行记录
-	 * - 如程序启动时，数据库测试连接超时，但程序认为可以稍后再次测试
-	 * - 颜色：yellow
-	 * @param {any} where 在哪里发生
-	 * @param {any} where 在做什么
-	 * @param {any[]} infos 日志内容。第一个内容不换行，第二个内容开始换行并缩进
+	 * warnD
+	 * - mark as inline update ended
+	 * - used to record operation datas that may cause exceptions
+	 * - such as the database connection timed out during the startup of the program,
+	 *   but the program can be connected again later
+	 * - yellow color
+	 * @param {any} where
+	 * @param {any} what
+	 * @param {any[]} infos the first content will not wrap, and the second content will wrap with indent
 	 */
 	warnD(where, what, ...infos) { this.logger.warn(symbolLogDone, ...arguments); }
 	/**
-	 * 记录`错误`日志，并标记行内更新结束
-	 * - 用于`异常`逻辑、`错误`数据的运行记录
-	 * - 如业务运行时，数据库运行失败。必要字段为空导致业务中止等
-	 * - 颜色：red
-	 * @param {any} where 在哪里发生
-	 * @param {any} where 在做什么
-	 * @param {any[]} infos 日志内容。第一个内容不换行，第二个内容开始换行并缩进
+	 * errorD
+	 * - mark as inline update ended
+	 * - used to record abnormal logic and unexpected error datas
+	 * - such as when inserting data into the database.
+	 *   but the necessary fields are empty, resulting in business interruption
+	 * - red color
+	 * @param {any} where
+	 * @param {any} what
+	 * @param {any[]} infos the first content will not wrap, and the second content will wrap with indent
 	 */
 	errorD(where, what, ...infos) { this.logger.error(symbolLogDone, ...arguments); }
 	/**
-	 * 记录`致命`日志，并标记行内更新结束
-	 * - 用于可能导致`程序退出`的严重的运行记录
-	 * - 如未捕获的异常、意外的文件读写
-	 * - 颜色：magenta
-	 * @param {any} where 在哪里发生
-	 * @param {any} where 在做什么
-	 * @param {any[]} infos 日志内容。第一个内容不换行，第二个内容开始换行并缩进
+	 * fatalD
+	 * - mark as inline update ended
+	 * - used to record critical logs that cause the program to exit
+	 * - such as unhandled exception, unexpected file read and write
+	 * - magenta color
+	 * @param {any} where
+	 * @param {any} what
+	 * @param {any[]} infos the first content will not wrap, and the second content will wrap with indent
 	 */
 	fatalD(where, what, ...infos) { this.logger.fatal(symbolLogDone, ...arguments); }
 	/**
-	 * 记录`标记`日志，并标记行内更新结束
-	 * - 最高级的日记记录，通常用于无关运行情况的必要的说明
-	 * - 除非关闭日志，否则都会输出日志
-	 * - 如版权说明、注意事项等
-	 * - 颜色：grey
-	 * @param {any} where 在哪里发生
-	 * @param {any} where 在做什么
-	 * @param {any[]} infos 日志内容。第一个内容不换行，第二个内容开始换行并缩进
+	 * markD
+	 * - mark as inline update ended
+	 * - used to record the necessary descriptions of unrelated operation conditions
+	 * - unless the log is turned off, it will be output
+	 * - such as copyright description and precautions
+	 * - grey color
+	 * @param {any} where
+	 * @param {any} what
+	 * @param {any[]} infos the first content will not wrap, and the second content will wrap with indent
 	 */
 	markD(where, what, ...infos) { this.logger.mark(symbolLogDone, ...arguments); }
 
 	/**
-	 * 记录`致命`日志，并退出程序
-	 * - 用于可能导致`程序退出`的严重的运行记录
-	 * - 如未捕获的异常、意外的文件读写
-	 * - 颜色：magenta
-	 * @param {number} code 退出代码
-	 * @param {any} where 在哪里发生
-	 * @param {any} where 在做什么
-	 * @param {any[]} infos 日志内容。第一个内容不换行，第二个内容开始换行并缩进
+	  * fatalU
+	 * - exit with detect exit code
+	 * - used to record critical logs that cause the program to exit
+	 * - such as unhandled exception, unexpected file read and write
+	 * - magenta color
+	 * @param {number} code exit code
+	 * @param {any} where
+	 * @param {any} what
+	 * @param {any[]} infos the first content will not wrap, and the second content will wrap with indent
 	 */
 	fatalE(code, where, what, ...infos) {
 		const args = [...arguments];
@@ -510,7 +534,4 @@ const Hades = class Hades {
 
 		process.exit(code);
 	}
-};
-
-
-export default Hades;
+}

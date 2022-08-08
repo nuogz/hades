@@ -12,6 +12,6 @@
 		"FATAL": "致命",
 		"MARK": "标记",
 		"OFF": "关闭",
-		"handleTypeError": "option.handle必须是函数"
+		"handleTypeError": "~[option.handle]必须是函数"
 	}
 }
