@@ -3,6 +3,7 @@
 ## v5.0.3 - 2022.08.09 15
 * improve usage of i18n
 * remove `localesSupport`
+* improve `FileAppender.OptionHandleTypeError`
 
 
 ## v5.0.2 - 2022.08.09 08

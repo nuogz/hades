@@ -12,6 +12,6 @@
 		"FATAL": "FATAL",
 		"MARK": "MARK",
 		"OFF": "OFF",
-		"handleTypeError": "option.handle must be a Function"
+		"optionHandleTypeError": "The \"option.handle\" argument must be of type function. Received {{handle}} ({{type}})"
 	}
 }
