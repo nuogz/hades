@@ -1,6 +1,6 @@
 {
 	"name": "@nuogz/hades",
-	"version": "5.0.2",
+	"version": "5.0.3",
 	"description": "log library based on log4js",
 	"author": "Nuogz",
 	"license": "LGPL-3.0-or-later",

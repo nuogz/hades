@@ -1,5 +1,10 @@
 # CHANGELOG
 
+## v5.0.3 - 2022.08.09 15
+* improve usage of i18n
+* remove `localesSupport`
+
+
 ## v5.0.2 - 2022.08.09 08
 * update repository url
 * bump up `@nuogz/i18n` to `1.0.2`
