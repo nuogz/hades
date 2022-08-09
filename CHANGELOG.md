@@ -1,5 +1,12 @@
 # CHANGELOG
 
+## v5.0.2 - 2022.08.09 08
+* update repository url
+* bump up `@nuogz/i18n` to `1.0.2`
+* use unified `.eslintrc.cjs` from `@nuogz/pangu`
+* use unified `.vscode/launch.json` from `@nuogz/pangu`
+
+
 ## v5.0.1 - 2022.08.08 20
 * add `file` and `repository` option into `package.json`
 * tweak `.eslintrc.cjs`
