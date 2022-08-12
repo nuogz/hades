@@ -1,6 +1,6 @@
 {
 	"name": "@nuogz/hades",
-	"version": "5.0.3",
+	"version": "5.0.5",
 	"description": "log library based on log4js",
 	"author": "Nuogz",
 	"license": "LGPL-3.0-or-later",
@@ -22,7 +22,7 @@
 		"eslint": "^8.21.0"
 	},
 	"dependencies": {
-		"@nuogz/i18n": "^1.0.2",
+		"@nuogz/i18n": "^1.2.0",
 		"chalk": "^5.0.1",
 		"log-update": "^4.0.0",
 		"log4js": "^6.6.1",

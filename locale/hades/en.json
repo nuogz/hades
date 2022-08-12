@@ -3,15 +3,19 @@
 		"name": "Logger",
 		"init": "init",
 		"path": "path",
-		"ALL": "ALL",
-		"TRACE": "TRACE",
-		"DEBUG": "DEBUG",
-		"INFO": "INFO",
-		"WARN": "WARN",
-		"ERROR": "ERROR",
-		"FATAL": "FATAL",
-		"MARK": "MARK",
-		"OFF": "OFF",
-		"optionHandleTypeError": "The ~[\"option.handle\"] argument must be of type function. Received {{handle,hadesValue}} ({{type,hadesTerm}})"
+		"level": {
+			"ALL": "ALL",
+			"TRACE": "TRACE",
+			"DEBUG": "DEBUG",
+			"INFO": "INFO",
+			"WARN": "WARN",
+			"ERROR": "ERROR",
+			"FATAL": "FATAL",
+			"MARK": "MARK",
+			"OFF": "OFF"
+		},
+		"error": {
+			"optionHandleType": "The ~[\"option.handle\"] argument must be of type function. Received {{handle,hadesValue}} ({{type,hadesTerm}})"
+		}
 	}
 }

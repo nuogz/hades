@@ -1,11 +1,9 @@
-import { dirname, resolve } from 'path';
-import { fileURLToPath } from 'url';
+import { resolve } from 'path';
 
 import Log4JS from 'log4js';
 
-import initI18N from '@nuogz/i18n';
-
 import { copyJSON } from './lib/tool.js';
+import { TT } from './lib/i18n.js';
 
 import formatLog from './lib/formatLog.js';
 import configureFile from './lib/FileAppender.js';
@@ -15,10 +13,6 @@ import symbolLogUpdate from './lib/LogUpdateSymbol.js';
 import symbolLogDone from './lib/LogDoneSymbol.js';
 
 
-
-const dirPackage = dirname(fileURLToPath(import.meta.url));
-const I18N = await initI18N(dirPackage);
-const T = (key, options = {}, lng) => I18N.t(key, Object.assign(copyJSON(options), { lng }));
 
 /**
  * Hades Option
@@ -136,6 +130,7 @@ export default class Hades {
 	 * @type {string}
 	 */
 	locale;
+	TT;
 
 
 	/**
@@ -169,6 +164,7 @@ export default class Hades {
 		this.isInitImmediate = option?.isInitImmediate ?? flags.isInitImmediate ?? true;
 
 		this.locale = option?.locale;
+		this.TT = TT(this.locale);
 
 
 		if(this.isInitImmediate) { this.init(); }
@@ -188,7 +184,7 @@ export default class Hades {
 		configure.appenders[nameAppenderConsole] = {
 			type: { configure: configureConsole },
 			isHighlight,
-			T: (key, options) => T(key, options, this.locale),
+			T: (key, options) => this.TT(key, options),
 			handle: (event, isHighlight, T) => formatLog(event, isHighlight, T),
 		};
 		appenders.push(nameAppenderConsole);
@@ -200,7 +196,7 @@ export default class Hades {
 				type: { configure: configureFile },
 				path: resolve(dirLog, name + '.log'),
 				isHighlight, maxLogSize: this.sizeLogFileMax, eol: '\n',
-				T: (key, options) => T(key, options, this.locale),
+				T: (key, options) => this.TT(key, options),
 				handle: (event, isHighlight, T) => formatLog(event, isHighlight, T)[0],
 			};
 			appenders.push(nameAppenderFile);
@@ -211,7 +207,7 @@ export default class Hades {
 				type: { configure: configureFile },
 				path: resolve(dirLog, name + '.stack.log'),
 				isHighlight, maxLogSize: this.sizeLogFileMax, eol: '\n',
-				T: (key, options) => T(key, options, this.locale),
+				T: (key, options) => this.TT(key, options),
 				handle: (event, isHighlight, T) => formatLog(event, isHighlight, T)[1],
 			};
 			appenders.push(nameAppenderFileStack);
@@ -228,10 +224,10 @@ export default class Hades {
 
 		if(isOutputInited) {
 			if(dirLog && isOutputDirLog) {
-				this.info(T('name', {}, this.locale), T('init', {}, this.locale), '✔ ', `${T('init', {}, this.locale)}~{${dirLog}}`);
+				this.info(this.TT('name'), this.TT('init'), '✔ ', `${this.TT('init')}~{${dirLog}}`);
 			}
 			else {
-				this.info(T('name', {}, this.locale), T('init', {}, this.locale), '✔ ');
+				this.info(this.TT('name'), this.TT('init'), '✔ ');
 			}
 		}
 

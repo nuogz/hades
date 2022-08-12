@@ -1,5 +1,10 @@
 # CHANGELOG
 
+## v5.0.5 - 2022.08.12 10
+* improve `locale` keys and translations
+* bump up `@nuogz/i18n` to `1.2.0` and update related code
+
+
 ## v5.0.3 - 2022.08.09 15
 * improve usage of i18n
 * remove `localesSupport`
