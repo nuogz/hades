@@ -1,7 +1,14 @@
 # CHANGELOG
 
+## v5.2.0 - 2022.09.02 17
+* rename environment variable `NENV_HADES_NAME` from `HADES_NAME`
+* rename environment variable `NENV_HADES_LEVEL` from `HADES_DIR`
+* rename environment variable `NENV_HADES_DIR` from `HADES_DIR`
+* rename environment variable `NENV_HADES_OPTIONS` from `HADES_DIR`
+
+
 ## v5.1.0 - 2022.09.02 16
-* Resupport environment variable `HADES_NAME`
+* resupport environment variable `HADES_NAME`
 * rename environment variable `HADES_DIR` from `HADES_DIR_LOG`
 * tweak project configs
 * bump up dependencies

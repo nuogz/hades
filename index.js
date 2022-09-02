@@ -42,7 +42,7 @@ export const configureStatic = {
 
 
 const parseFlagsEnv = () => {
-	let textRaw = process.env.HADES_OPTIONS;
+	let textRaw = process.env.NENV_HADES_OPTIONS;
 
 	if(textRaw === undefined || !textRaw.trim()) { return {}; }
 
@@ -150,9 +150,9 @@ export default class Hades {
 	constructor(name, level, dirLog, option) {
 		const env = process.env;
 
-		this.name = name ?? env.HADES_NAME ?? 'default';
-		this.level = level ?? env.HADES_LEVEL ?? 'all';
-		this.dirLog = dirLog ?? env.HADES_DIR;
+		this.name = name ?? env.NENV_HADES_NAME ?? 'default';
+		this.level = level ?? env.NENV_HADES_LEVEL ?? 'all';
+		this.dirLog = dirLog ?? env.NENV_HADES_DIR;
 
 		this.sizeLogFileMax = option?.sizeLogFileMax ?? 1024 * 1024 * 20;
 
