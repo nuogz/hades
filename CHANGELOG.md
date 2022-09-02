@@ -1,5 +1,12 @@
 # CHANGELOG
 
+## v5.1.0 - 2022.09.02 16
+* Resupport environment variable `HADES_NAME`
+* rename environment variable `HADES_DIR` from `HADES_DIR_LOG`
+* tweak project configs
+* bump up dependencies
+
+
 ## v5.0.5 - 2022.08.12 10
 * improve `locale` keys and translations
 * bump up `@nuogz/i18n` to `1.2.0` and update related code

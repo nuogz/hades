@@ -150,9 +150,9 @@ export default class Hades {
 	constructor(name, level, dirLog, option) {
 		const env = process.env;
 
-		this.name = name ?? 'default';
+		this.name = name ?? env.HADES_NAME ?? 'default';
 		this.level = level ?? env.HADES_LEVEL ?? 'all';
-		this.dirLog = dirLog ?? env.HADES_DIR_LOG;
+		this.dirLog = dirLog ?? env.HADES_DIR;
 
 		this.sizeLogFileMax = option?.sizeLogFileMax ?? 1024 * 1024 * 20;
 
