@@ -1,6 +1,6 @@
 {
 	"name": "@nuogz/hades",
-	"version": "6.0.2",
+	"version": "6.0.3",
 	"description": "Log library based on log4js-node",
 	"author": "Nuogz",
 	"license": "LGPL-3.0-or-later",
@@ -13,7 +13,7 @@
 	"engines": {
 		"node": ">=14.18.1"
 	},
-	"main": "index.js",
+	"main": "./index.js",
 	"files": [
 		"index.js",
 		"lib/**",

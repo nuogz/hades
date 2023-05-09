@@ -1,5 +1,9 @@
 # CHANGELOG
 
+## v6.0.3 - 2023.05.09 19
+* fix `package.json`
+
+
 ## v6.0.2 - 2023.05.09 16
 * fix `d.ts`
 
