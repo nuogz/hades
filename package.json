@@ -1,6 +1,6 @@
 {
 	"name": "@nuogz/hades",
-	"version": "5.2.0",
+	"version": "6.0.0",
 	"description": "Log library based on log4js-node",
 	"author": "Nuogz",
 	"license": "LGPL-3.0-or-later",
@@ -8,26 +8,33 @@
 		"type": "git",
 		"url": "github:nuogz/hades"
 	},
-	"type": "module",
 	"typesSource": [],
+	"type": "module",
 	"engines": {
 		"node": ">=14.18.1"
 	},
-	"main": "./index.js",
+	"main": "index.js",
 	"files": [
 		"index.js",
 		"lib/**",
-		"locale/**"
+		"locale/**",
+		"**/*.d.ts"
 	],
+	"scripts": {
+		"emitDeclaration": "tsc ./index.js --declaration --emitDeclarationOnly --allowJs"
+	},
 	"devDependencies": {
-		"eslint": "^8.23.0"
+		"@types/node": "^20.1.1",
+		"eslint": "^8.40.0",
+		"typescript": "^5.0.4"
 	},
 	"dependencies": {
-		"@nuogz/i18n": "^1.2.1",
-		"chalk": "^5.0.1",
+		"@nuogz/i18n": "^3.1.0",
+		"@nuogz/utility": "^1.6.5",
+		"chalk": "^5.2.0",
+		"dayjs": "^1.11.7",
 		"log-update": "^4.0.0",
-		"log4js": "^6.6.1",
-		"moment": "^2.29.4",
-		"streamroller": "^3.1.2"
+		"log4js": "^6.9.1",
+		"streamroller": "^3.1.5"
 	}
 }

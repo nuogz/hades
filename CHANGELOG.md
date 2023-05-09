@@ -1,5 +1,13 @@
 # CHANGELOG
 
+## v6.0.0 - 2023.05.09 15
+* use `Error.cause` to support output error chains
+* new `ErrorCause` and `ErrorData` methods to be compatible with `Error.cause`
+* bump up `@nuogz/i18n` to `v3.x` and renew related code
+* add `d.ts` and renew related code
+* bump up dependencies
+
+
 ## v5.2.0 - 2022.09.02 17
 * rename environment variable `NENV_HADES_NAME` from `HADES_NAME`
 * rename environment variable `NENV_HADES_LEVEL` from `HADES_DIR`
@@ -40,6 +48,6 @@
 ## v5.0.0 - 2022.08.08 19
 * tweak all files for publishing to npm
 * start use `CHANGLOG.md` since version `v5.0.0`
-* use library `@nuogz/i18n`instead inline i18n code
+* use library `@nuogz/i18n` instead inline i18n code
 * translate all inline documents info english
 * bump up `chalk` to `v5.x`

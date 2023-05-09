@@ -1,21 +1,20 @@
 {
-	"translation": {
-		"name": "日志",
-		"init": "加载",
-		"path": "路径",
-		"level": {
-			"ALL": "全部",
-			"TRACE": "跟踪",
-			"DEBUG": "调试",
-			"INFO": "信息",
-			"WARN": "警告",
-			"ERROR": "错误",
-			"FATAL": "致命",
-			"MARK": "标记",
-			"OFF": "关闭"
-		},
-		"error": {
-			"optionHandleType": "\"option.handle\"参数必须是函数。收到：{{handle}} ({{type}})"
-		}
+	"name@proto": "日志",
+	"init@proto": "加载",
+	"path@proto": "路径",
+	"level": {
+		"ALL@proto": "全部",
+		"TRACE@proto": "跟踪",
+		"DEBUG@proto": "调试",
+		"INFO@proto": "信息",
+		"WARN@proto": "警告",
+		"ERROR@proto": "错误",
+		"FATAL@proto": "致命",
+		"MARK@proto": "标记",
+		"OFF@proto": "关闭"
+	},
+	"ArgumentError": {
+		"invalidOptionHandle@proto": "参数'option.handle'必须是类型function，值：{{-handle,valueType}}",
+		"invalidOptionHandle@hades": "参数~[option.handle]必须是类型~{function}，值{{-handle,valueType@hades}}"
 	}
 }
