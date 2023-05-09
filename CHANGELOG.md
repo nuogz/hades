@@ -1,5 +1,10 @@
 # CHANGELOG
 
+## v6.1.0 - 2023.05.09 16
+* fix break code
+* rename environment variable `NENV_HADES_FLAGS` from `NENV_HADES_OPTIONS`
+
+
 ## v6.0.0 - 2023.05.09 15
 * use `Error.cause` to support output error chains
 * new `ErrorCause` and `ErrorData` methods to be compatible with `Error.cause`

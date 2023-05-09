@@ -47,7 +47,7 @@ export const configureStatic = {
 
 
 const parseFlagsEnv = () => {
-	let textRaw = process.env.NENV_HADES_OPTIONS;
+	let textRaw = process.env.NENV_HADES_FLAGS;
 
 	if(textRaw === undefined || !textRaw.trim()) { return {}; }
 
@@ -216,7 +216,7 @@ export default class Hades {
 
 		const nameAppenderConsole = `${name}-console`;
 		configure.appenders[nameAppenderConsole] = {
-			type: { configure: moduleAppenderConsole },
+			type: moduleAppenderConsole,
 			isHighlight,
 			T,
 			handle: (event, isHighlight, T) => formatLog(event, isHighlight, T),
