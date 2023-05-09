@@ -365,3 +365,4 @@ export type HadesOption = {
     isOutputDirLog: boolean;
     isInitImmediate: boolean;
 };
+import Log4JS from 'log4js';

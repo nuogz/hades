@@ -1,5 +1,9 @@
 # CHANGELOG
 
+## v6.0.2 - 2023.05.09 16
+* fix `d.ts`
+
+
 ## v6.0.1 - 2023.05.09 16
 * fix break code
 * rename environment variable `NENV_HADES_FLAGS` from `NENV_HADES_OPTIONS`
