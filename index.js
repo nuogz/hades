@@ -6,8 +6,8 @@ import Log4JS from 'log4js';
 import formatLog from './lib/formatLog.js';
 import { symbolLogUpdate, symbolLogDone } from './lib/symbol.js';
 
-import moduleAppenderFile from './lib/FileAppender.js';
-import moduleAppenderConsole from './lib/ConsoleAppender.js';
+import moduleAppenderFile from './lib/FileAppenderModule.js';
+import moduleAppenderConsole from './lib/ConsoleAppenderModule.js';
 
 import { copyJSON } from '@nuogz/utility';
 import { loadI18NResource, TT } from '@nuogz/i18n';
