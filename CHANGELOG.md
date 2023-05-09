@@ -1,6 +1,6 @@
 # CHANGELOG
 
-## v6.1.0 - 2023.05.09 16
+## v6.0.1 - 2023.05.09 16
 * fix break code
 * rename environment variable `NENV_HADES_FLAGS` from `NENV_HADES_OPTIONS`
 
