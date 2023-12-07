@@ -35,7 +35,7 @@ export default class Hades {
      * @param {HadesOption} [option]
      * @returns {Log4JS.Logger}
      */
-    constructor(name?: string, level?: string, dirLog?: string, option?: HadesOption);
+    constructor(name?: string | undefined, level?: string | undefined, dirLog?: string | undefined, option?: HadesOption | undefined);
     /**
      * logger name (file name by default)
      * @type {string}
@@ -92,7 +92,7 @@ export default class Hades {
      */
     logger: Log4JS.Logger;
     /** init Hades */
-    init(): Hades;
+    init(): this;
     /**
      * reload logger asynchronously
      * @returns {Promise<Hades>}
